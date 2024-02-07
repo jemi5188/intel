@@ -1,16 +1,19 @@
-# Sample Dockerfile
+ARG BASE_IMAGE=mcr.microsoft.com/windows/servercore:ltsc2019
+FROM $BASE_IMAGE
 
-# Indicates that the windowsservercore image will be used as the base image.
-FROM mcr.microsoft.com/windows/servercore:ltsc2019
+ENV APPVEYOR_BUILD_AGENT_VERSION=7.0.3212
 
-# Metadata indicating an image maintainer.
-LABEL maintainer="jshelton@contoso.com"
+COPY ./scripts/Windows ./scripts
 
-# Uses dism.exe to install the IIS role.
-RUN dism.exe /online /enable-feature /all /featurename:iis-webserver /NoRestart
+# Install Chocolatey
+RUN powershell -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'));" && SET "PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"
 
-# Creates an HTML file and adds content to this file.
-RUN echo "Hello World - Dockerfile" > c:\inetpub\wwwroot\index.html
+RUN choco install -y powershell-core && \
+    choco install -y 7zip.install && \
+    choco install -y git && \
+    choco install -y hg && \
+    choco install -y svn
 
-# Sets a command or process that will run each time a container is run from the new image.
-CMD [ "cmd" ]
+RUN powershell ./scripts/install_appveyor_build_agent_docker.ps1
+
+ENTRYPOINT [ "C:\\Program Files\\AppVeyor\\BuildAgent\\appveyor-build-agent.exe" ]
