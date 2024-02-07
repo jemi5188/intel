@@ -1,19 +1,37 @@
-ARG BASE_IMAGE=mcr.microsoft.com/windows/servercore/insider:10.0.20348.1
-FROM $BASE_IMAGE
+FROM debian
 
-ENV APPVEYOR_BUILD_AGENT_VERSION=7.0.3212
+RUN dpkg --add-architecture i386
 
-COPY ./scripts/Windows ./scripts
+RUN apt update
 
-# Install Chocolatey
-RUN powershell -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'));" && SET "PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"
+RUN DEBIAN_FRONTEND=noninteractive apt install wine qemu-kvm *zenhei* xz-utils dbus-x11 curl firefox-esr gnome-system-monitor mate-system-monitor  git xfce4 xfce4-terminal tightvncserver wget   -y
 
-RUN choco install -y powershell-core && \
-    choco install -y 7zip.install && \
-    choco install -y git && \
-    choco install -y hg && \
-    choco install -y svn
+RUN wget https://github.com/novnc/noVNC/archive/refs/tags/v1.2.0.tar.gz
 
-RUN powershell ./scripts/install_appveyor_build_agent_docker.ps1
+RUN tar -xvf v1.2.0.tar.gz
 
-ENTRYPOINT [ "C:\\Program Files\\AppVeyor\\BuildAgent\\appveyor-build-agent.exe" ]
+RUN mkdir  $HOME/.vnc
+
+RUN echo 'Jemilee' | vncpasswd -f > $HOME/.vnc/passwd
+
+RUN echo '/bin/env  MOZ_FAKE_NO_SANDBOX=1  dbus-launch xfce4-session'  > $HOME/.vnc/xstartup
+
+RUN chmod 600 $HOME/.vnc/passwd
+
+RUN chmod 755 $HOME/.vnc/xstartup
+
+RUN echo 'whoami ' >>/Jemilee.sh
+
+RUN echo 'cd ' >>/Jemilee.sh
+
+RUN echo "su -l -c 'vncserver :2000 -geometry 1360x768' "  >>/Jemilee.sh
+
+RUN echo 'cd /noVNC-1.2.0' >>/Jemilee.sh
+
+RUN echo './utils/launch.sh  --vnc localhost:7900 --listen 8900 ' >>/Jemilee.sh
+
+RUN chmod 755 /Jemilee.sh
+
+EXPOSE 8989
+
+CMD  /Jemilee.sh
