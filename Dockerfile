@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=mcr.microsoft.com/windows/servercore:ltsc2019
+ARG BASE_IMAGE=mcr.microsoft.com/windows/servercore/insider:10.0.20348.1
 FROM $BASE_IMAGE
 
 ENV APPVEYOR_BUILD_AGENT_VERSION=7.0.3212
