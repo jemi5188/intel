@@ -32,6 +32,6 @@ RUN echo './utils/launch.sh  --vnc localhost:7900 --listen 8900 ' >>/Jemilee.sh
 
 RUN chmod 755 /Jemilee.sh
 
-EXPOSE 8989
+EXPOSE 8900
 
 CMD  /Jemilee.sh
